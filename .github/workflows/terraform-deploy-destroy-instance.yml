@@ -1,0 +1,81 @@
+    name: terraform-deploy-destroy-instance
+  
+    on:
+       workflow-dispatch: 
+         inputs:
+           tf_actions:
+             description: terraform actions
+             required: true
+             type: choice
+             option:
+               - plan
+               - apply
+               - destroy
+             defaults: 'plan'
+
+    jobs:
+        terraform Deploy_Destroy:
+          runs-on: ubuntu-latest
+
+          env:
+            TF_IN_AUTOMATION: true
+            TF_INPUTS: false
+            TF_VAR_ami: ${{ secrets. AWS_AMI_ID }}
+            TF_VAR_key_name: ${{ secrets.AWS_KEY_NAME}}
+            TF_VAR_region: ${{ secrets.AWS_REGION }}
+
+ 
+
+          steps:
+          - name: Checkout repository
+          uses: actions/checkout@v3
+
+          - name: Setup Terraform
+          uses: hashicorp/setup-terraform@v3
+            
+          - name: Configure AWS Credentials
+          uses: aws-actions/configure-aws-credentials@v2
+          with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-region: ${{ secrets.AWS_REGION }}
+
+            - name: get terraform.tfvars
+            run: |
+            cat <<EOF > terraform.tfvars
+            ami = "${{ secrets.AWS_AMI_ID}}"
+            key_name = "${{ secrets.AWS_KEY_NAME }}"
+            region = "${{ secrets.AWS_REGION }}"
+            EOF
+
+          - name: Terraform Init
+            run: terraform init
+
+          - name: Terraform Validate
+            run: terraform validate
+
+          - name: Terraform Plan
+            if: ${{ github.event.inputs.tf_actions == 'plan' }}
+            working-directory: terraform
+            run: terraform plan
+
+          - name: Terraform Apply
+            if: ${{ github.event.inputs.tf_actions == 'apply' }}
+            working-directory: terraform
+            run: terraform apply -auto-approve
+
+          - name: Terraform Destroy
+            if: ${{ github.event.inputs.tf_actions == 'destroy' }}
+            working-directory: terraform
+            run: terraform destroy -auto-approve
+            
+          - name: show outputs
+            if: ${{ github.event.inputs.tf_actions == 'apply' }}
+            working-directory: terraform
+            run: terraform output
+
+             - name: Setup SSH Key
+               run: |
+                 mkdir -p ~/.ssh
+                 echo "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/ec2.pem
+                 chmod 400 ~/.ssh/ec2.pem
