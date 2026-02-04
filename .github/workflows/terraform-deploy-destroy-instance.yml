@@ -44,8 +44,15 @@ jobs:
           echo "AMAZON_IP=$(terraform output -raw amazon_linux_ip)" >> $GITHUB_ENV
           echo "UBUNTU_IP=$(terraform output -raw ubuntu_ip)" >> $GITHUB_ENV
 
+      
       - name: Install Ansible
         run: sudo apt-get update && sudo apt-get install -y ansible
+
+      - name: Setup SSH key (chmod 400)
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/ec2_key.pem
+          chmod 400 ~/.ssh/ec2_key.pem
 
       - name: Create Ansible Inventory
         run: |
@@ -58,4 +65,4 @@ jobs:
           ANSIBLE_HOST_KEY_CHECKING: "False"
         run: |
           ansible-playbook -i inventory.ini ansible/playbook.yml \
-            --private-key ~/.ssh/${{ secrets.EC2_KEY_NAME }}.pem
+            --private-key ~/.ssh/ec2_key.pem
