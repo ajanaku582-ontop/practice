@@ -1,0 +1,30 @@
+- name: Configure Amazon Linux
+  hosts: amazon
+  become: true
+  tasks:
+    - name: Install nginx
+      yum:
+        name: nginx
+        state: present
+
+    - name: Start nginx
+      service:
+        name: nginx
+        state: started
+        enabled: true
+
+- name: Configure Ubuntu
+  hosts: ubuntu
+  become: true
+  tasks:
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: true
+
+    - name: Start nginx
+      service:
+        name: nginx
+        state: started
+        enabled: true

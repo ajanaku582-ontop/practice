@@ -1,81 +1,61 @@
-    name: terraform-deploy-destroy-instance
-  
-    on:
-       workflow-dispatch: 
-         inputs:
-           tf_actions:
-             description: terraform actions
-             required: true
-             type: choice
-             option:
-               - plan
-               - apply
-               - destroy
-             defaults: 'plan'
+name: Terraform + Ansible Deploy
 
-    jobs:
-        terraform Deploy_Destroy:
-          runs-on: ubuntu-latest
+on:
+  workflow_dispatch:
+    inputs:
+        tf_actions:
+          description: 'terrsform actions'
+          required: true
+          default: 'apply'
+          type: choice
+          options:
+            - apply
+            - destroy
+          
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-          env:
-            TF_IN_AUTOMATION: true
-            TF_INPUTS: false
-            TF_VAR_ami: ${{ secrets. AWS_AMI_ID }}
-            TF_VAR_key_name: ${{ secrets.AWS_KEY_NAME}}
-            TF_VAR_region: ${{ secrets.AWS_REGION }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
- 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-          steps:
-          - name: Checkout repository
-          uses: actions/checkout@v3
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
 
-          - name: Setup Terraform
-          uses: hashicorp/setup-terraform@v3
-            
-          - name: Configure AWS Credentials
-          uses: aws-actions/configure-aws-credentials@v2
-          with:
-            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            aws-region: ${{ secrets.AWS_REGION }}
+      - name: Terraform Apply
+        working-directory: terraform
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-2
+        run: |
+          terraform apply -auto-approve \
+            -var="key_name=${{ secrets.EC2_KEY_NAME }}"
 
-            - name: get terraform.tfvars
-            run: |
-            cat <<EOF > terraform.tfvars
-            ami = "${{ secrets.AWS_AMI_ID}}"
-            key_name = "${{ secrets.AWS_KEY_NAME }}"
-            region = "${{ secrets.AWS_REGION }}"
-            EOF
+      - name: Get Terraform Outputs
+        id: tf_outputs
+        working-directory: terraform
+        run: |
+          echo "AMAZON_IP=$(terraform output -raw amazon_linux_ip)" >> $GITHUB_ENV
+          echo "UBUNTU_IP=$(terraform output -raw ubuntu_ip)" >> $GITHUB_ENV
 
-          - name: Terraform Init
-            run: terraform init
+      - name: Install Ansible
+        run: sudo apt-get update && sudo apt-get install -y ansible
 
-          - name: Terraform Validate
-            run: terraform validate
+      - name: Create Ansible Inventory
+        run: |
+          sed -e "s/AMAZON_IP/${AMAZON_IP}/" \
+              -e "s/UBUNTU_IP/${UBUNTU_IP}/" \
+              ansible/inventory.ini > inventory.ini
 
-          - name: Terraform Plan
-            if: ${{ github.event.inputs.tf_actions == 'plan' }}
-            working-directory: terraform
-            run: terraform plan
-
-          - name: Terraform Apply
-            if: ${{ github.event.inputs.tf_actions == 'apply' }}
-            working-directory: terraform
-            run: terraform apply -auto-approve
-
-          - name: Terraform Destroy
-            if: ${{ github.event.inputs.tf_actions == 'destroy' }}
-            working-directory: terraform
-            run: terraform destroy -auto-approve
-            
-          - name: show outputs
-            if: ${{ github.event.inputs.tf_actions == 'apply' }}
-            working-directory: terraform
-            run: terraform output
-
-             - name: Setup SSH Key
-               run: |
-                 mkdir -p ~/.ssh
-                 echo "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/ec2.pem
-                 chmod 400 ~/.ssh/ec2.pem
+      - name: Run Ansible Playbook
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          ansible-playbook -i inventory.ini ansible/playbook.yml \
+            --private-key ~/.ssh/${{ secrets.EC2_KEY_NAME }}.pem

@@ -1,0 +1,82 @@
+provider "aws" {
+  region = "us-east-2"
+}
+
+# Use default VPC
+data "aws_vpc" "default" {
+  default = true
+}
+
+# Security group for all instances
+resource "aws_security_group" "server_sg" {
+  name        = "server-sg"
+  description = "Allow SSH and HTTP"
+  vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "server-sg"
+  }
+}
+
+data "aws_ami" "amazon_linux" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*-x86_64"]
+  }
+}
+
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+}
+
+resource "aws_instance" "amazon_linux" {
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = var.instance_type
+  key_name      = var.key_name
+
+  tags = {
+    Name = "amazon-linux-node"
+  }
+}
+
+resource "aws_instance" "ubuntu" {
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = var.instance_type
+  key_name      = var.key_name
+
+  tags = {
+    Name = "ubuntu-node"
+  }
+}
