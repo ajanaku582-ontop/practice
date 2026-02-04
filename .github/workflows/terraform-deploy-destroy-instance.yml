@@ -64,5 +64,5 @@ jobs:
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
         run: |
-          ansible-playbook -i inventory.ini ansible/playbook.yml \
+          ansible-playbook -i inventory.ini ansible/nginx-install.yml \
             --private-key ~/.ssh/ec2_key.pem
