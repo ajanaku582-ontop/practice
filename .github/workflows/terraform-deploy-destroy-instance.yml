@@ -46,7 +46,7 @@ jobs:
         run: |
           terraform apply -auto-approve \
             -var="key_name=${{ secrets.EC2_KEY_NAME }}"
-            -var="instance_type=t2.micro"
+            -var="instance_type=c7i-flex.large"
         
       - name: Terraform Destroy
         if: github.event.inputs.tf_actions == 'destroy'
@@ -54,15 +54,15 @@ jobs:
         run: |
           terraform destroy -auto-approve \
             -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
-            -var="instance_type=t2.micro"
+            -var="instance_type=c7i-flex.large"
 
 
       - name: Get Terraform Outputs
         id: tf_outputs
         working-directory: terraform
         run: |
-          echo "AMAZON_IP=$(terraform output -raw amazon_linux_ip)" >> $GITHUB_ENV
-          echo "UBUNTU_IP=$(terraform output -raw ubuntu_ip)" >> $GITHUB_ENV
+          echo "AMAZON_IP=$(terraform output -raw amazon_linux_ips)" >> $GITHUB_ENV
+          echo "UBUNTU_IP=$(terraform output -raw ubuntu_ips)" >> $GITHUB_ENV
 
       
       - name: Install Ansible
