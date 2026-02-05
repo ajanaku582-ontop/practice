@@ -58,8 +58,8 @@ jobs:
         id: tf_outputs
         working-directory: terraform
         run: |
-         AMAZON_IPS=$(terraform output -json amazon_linux_ips | jq -r '.[]')
-         UBUNTU_IPS=$(terraform output -json ubuntu_ips | jq -r '.[]')
+         AMAZON_IPS=$(terraform output -json amazon_linux_ips | jq -r '. | join(",")')
+         UBUNTU_IPS=$(terraform output -json ubuntu_ips | jq -r '. | join(",")')
          echo "AMAZON_IPS=$AMAZON_IPS" >> $GITHUB_ENV
          echo "UBUNTU_IPS=$UBUNTU_IPS" >> $GITHUB_ENV
 
