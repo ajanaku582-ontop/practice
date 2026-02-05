@@ -67,9 +67,11 @@ jobs:
 
       - name: Setup SSH key (chmod 400)
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/ec2_key.pem
-          chmod 400 ~/.ssh/ec2_key.pem
+          - name: Setup SSH key
+            mkdir -p ~/.ssh
+            printf "%s\n" "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/ec2_key.pem
+            chmod 400 ~/.ssh/ec2_key.pem
+
 
     #   - name: Create Ansible Inventory
     #     run: |
