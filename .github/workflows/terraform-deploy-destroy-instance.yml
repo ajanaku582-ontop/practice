@@ -72,17 +72,19 @@ jobs:
             printf "%s\n" "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/ec2_key.pem
             chmod 400 ~/.ssh/ec2_key.pem
 
-      - name: Disable host key checking
-        run: echo "Host *\n  StrictHostKeyChecking no\n" >> ~/.ssh/config
-      
-      - name: Add EC2 hosts to known_hosts
+      - name: Generate dynamic inventory
+        working-directory: terraform
         run: |
-            ssh-keyscan -H 3.133.117.129 >> ~/.ssh/known_hosts
-            ssh-keyscan -H 18.220.246.233 >> ~/.ssh/known_hosts
-            ssh-keyscan -H 18.119.143.2 >> ~/.ssh/known_hosts
-            ssh-keyscan -H 3.144.232.200 >> ~/.ssh/known_hosts
-            ssh-keyscan -H 18.217.226.107 >> ~/.ssh/known_hosts
-            ssh-keyscan -H 3.135.193.61 >> ~/.ssh/known_hosts
+            mkdir -p ../ansible
+            echo "[amazon]" > ../ansible/inventory.ini
+            terraform output -json amazon_linux_ips \
+            | jq -r '.[] | "\(. ) ansible_user=ec2-user"' \
+            >> ../ansible/inventory.ini
+
+            echo "[ubuntu]" >> ../ansible/inventory.ini
+            terraform output -json ubuntu_ips \
+            | jq -r '.[] | "\(. ) ansible_user=ubuntu"' \
+            >> ../ansible/inventory.ini
 
       - name: Test SSH connectivity
         run: ansible -i inventory.ini all -m ping --private-key ~/.ssh/ec2_key.pem
