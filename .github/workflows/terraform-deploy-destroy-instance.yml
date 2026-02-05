@@ -65,23 +65,22 @@ jobs:
       - name: Install Ansible
         run: sudo apt-get update && sudo apt-get install -y ansible
 
-      - name: Setup SSH key (chmod 400)
+      - name: Setup SSH key
         run: |
-          - name: Setup SSH key
             mkdir -p ~/.ssh
             printf "%s\n" "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/ec2_key.pem
             chmod 400 ~/.ssh/ec2_key.pem
 
+      - name: Test SSH
+        run: ansible -i inventory.ini all -m ping --private-key ~/.ssh/ec2_key.pem
+
+      - name: Run Ansible Playbook
+        run: ansible-playbook -i inventory.ini ansible/nginx-install.yml --private-key ~/.ssh/ec2_key.pem
+        env:
+            ANSIBLE_HOST_KEY_CHECKING: False
 
     #   - name: Create Ansible Inventory
     #     run: |
     #       sed -e "s/AMAZON_IP/${AMAZON_IP}/" \
     #           -e "s/UBUNTU_IP/${UBUNTU_IP}/" \
     #           ansible/inventory.ini > inventory.ini
-
-      - name: Run Ansible Playbook
-        env:
-          ANSIBLE_HOST_KEY_CHECKING: "False"
-        run: |
-          ansible-playbook -i inventory.ini ansible/nginx-install.yml \
-            --private-key ~/.ssh/ec2_key.pem
