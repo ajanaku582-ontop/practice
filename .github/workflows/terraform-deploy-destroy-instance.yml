@@ -71,11 +71,11 @@ jobs:
           echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/ec2_key.pem
           chmod 400 ~/.ssh/ec2_key.pem
 
-      - name: Create Ansible Inventory
-        run: |
-          sed -e "s/AMAZON_IP/${AMAZON_IP}/" \
-              -e "s/UBUNTU_IP/${UBUNTU_IP}/" \
-              ansible/inventory.ini > inventory.ini
+    #   - name: Create Ansible Inventory
+    #     run: |
+    #       sed -e "s/AMAZON_IP/${AMAZON_IP}/" \
+    #           -e "s/UBUNTU_IP/${UBUNTU_IP}/" \
+    #           ansible/inventory.ini > inventory.ini
 
       - name: Run Ansible Playbook
         env:
