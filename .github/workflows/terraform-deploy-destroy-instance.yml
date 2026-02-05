@@ -42,9 +42,20 @@ jobs:
 
       - name: Terraform Apply
         working-directory: terraform
+        if: github.event.inputs.tf_actions == 'apply'
         run: |
           terraform apply -auto-approve \
             -var="key_name=${{ secrets.EC2_KEY_NAME }}"
+            -var="instance_type=t2.micro"
+        
+      - name: Terraform Destroy
+        if: github.event.inputs.tf_actions == 'destroy'
+        working-directory: terraform
+        run: |
+          terraform destroy -auto-approve \
+            -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
+            -var="instance_type=t2.micro"
+
 
       - name: Get Terraform Outputs
         id: tf_outputs
