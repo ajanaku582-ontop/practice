@@ -74,6 +74,15 @@ jobs:
 
       - name: Disable host key checking
         run: echo "Host *\n  StrictHostKeyChecking no\n" >> ~/.ssh/config
+      
+      - name: Add EC2 hosts to known_hosts
+        run: |
+            ssh-keyscan -H 3.133.117.129 >> ~/.ssh/known_hosts
+            ssh-keyscan -H 18.220.246.233 >> ~/.ssh/known_hosts
+            ssh-keyscan -H 18.119.143.2 >> ~/.ssh/known_hosts
+            ssh-keyscan -H 3.144.232.200 >> ~/.ssh/known_hosts
+            ssh-keyscan -H 18.217.226.107 >> ~/.ssh/known_hosts
+            ssh-keyscan -H 3.135.193.61 >> ~/.ssh/known_hosts
 
       - name: Test SSH connectivity
         run: ansible -i inventory.ini all -m ping --private-key ~/.ssh/ec2_key.pem
