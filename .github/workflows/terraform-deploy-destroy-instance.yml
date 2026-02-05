@@ -86,13 +86,15 @@ jobs:
             | jq -r '.[] | "\(. ) ansible_user=ubuntu"' \
             >> ../ansible/inventory.ini
 
-      - name: Test SSH connectivity
-        run: ansible -i inventory.ini all -m ping --private-key ~/.ssh/ec2_key.pem
+      - name: Test Ansible connectivity
+        run: |
+            ANSIBLE_HOST_KEY_CHECKING=False \
+            ansible -i inventory.ini all -m ping \
+             --private-key ~/.ssh/ec2_key.pem
+
 
       - name: Run Ansible Playbook
         run: ansible-playbook -i inventory.ini ansible/nginx-install.yml --private-key ~/.ssh/ec2_key.pem
-        env:
-            ANSIBLE_HOST_KEY_CHECKING: False
 
     #   - name: Create Ansible Inventory
     #     run: |
