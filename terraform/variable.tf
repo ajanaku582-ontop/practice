@@ -1,15 +1,15 @@
 variable "aws_region" {
-  default = "us-east-1"
+  default = "us-east-2"
 }
 
 variable "instance_type" {
   description = "Free Tier EC2 instance type"
   type        = string
-  default     = "t2.micro"
+  default     = "c7i-flex.large"
 
   validation {
-    condition     = contains(["t2.micro", "t3.micro"], var.instance_type)
-    error_message = "Only Free Tier instance types (t2.micro or t3.micro) are allowed."
+    condition     = contains(["c7i-flex.large"], var.instance_type)
+    error_message = "Only Free Tier instance types (c7i-flex.large) are allowed."
   }
 }
 

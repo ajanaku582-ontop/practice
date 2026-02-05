@@ -73,21 +73,27 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_instance" "amazon_linux" {
+  count         = 3
   ami           = data.aws_ami.amazon_linux.id
   instance_type = var.instance_type
   key_name      = var.key_name
+  vpc_security_group_ids = [aws_security_group.server_sg.id]
 
   tags = {
-    Name = "amazon-linux-node"
+    Name = "amazon-linux-node-${count.index + 1}"
+    OS   = "amazon-linux"
   }
 }
 
 resource "aws_instance" "ubuntu" {
+  count         = 3
   ami           = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
   key_name      = var.key_name
+  vpc_security_group_ids = [aws_security_group.server_sg.id]
 
   tags = {
-    Name = "ubuntu-node"
+    Name = "ubuntu-node-${count.index + 1}"
+    OS   = "ubuntu"
   }
 }
