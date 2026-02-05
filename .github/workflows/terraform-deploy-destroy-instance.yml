@@ -58,10 +58,11 @@ jobs:
         id: tf_outputs
         working-directory: terraform
         run: |
-          echo "AMAZON_IP=$(terraform output -raw amazon_linux_ips)" >> $GITHUB_ENV
-          echo "UBUNTU_IP=$(terraform output -raw ubuntu_ips)" >> $GITHUB_ENV
+         AMAZON_IPS=$(terraform output -json amazon_linux_ips | jq -r '.[]')
+         UBUNTU_IPS=$(terraform output -json ubuntu_ips | jq -r '.[]')
+         echo "AMAZON_IPS=$AMAZON_IPS" >> $GITHUB_ENV
+         echo "UBUNTU_IPS=$UBUNTU_IPS" >> $GITHUB_ENV
 
-      
       - name: Install Ansible
         run: sudo apt-get update && sudo apt-get install -y ansible
 
@@ -71,7 +72,10 @@ jobs:
             printf "%s\n" "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/ec2_key.pem
             chmod 400 ~/.ssh/ec2_key.pem
 
-      - name: Test SSH
+      - name: Disable host key checking
+        run: echo "Host *\n  StrictHostKeyChecking no\n" >> ~/.ssh/config
+
+      - name: Test SSH connectivity
         run: ansible -i inventory.ini all -m ping --private-key ~/.ssh/ec2_key.pem
 
       - name: Run Ansible Playbook
