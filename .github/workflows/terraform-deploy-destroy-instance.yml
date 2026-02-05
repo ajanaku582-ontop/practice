@@ -46,16 +46,13 @@ jobs:
         run: |
           terraform apply -auto-approve \
             -var="key_name=${{ secrets.EC2_KEY_NAME }}"
-            -var="instance_type=c7i-flex.large"
         
       - name: Terraform Destroy
         if: github.event.inputs.tf_actions == 'destroy'
         working-directory: terraform
         run: |
           terraform destroy -auto-approve \
-            -var="key_name=${{ secrets.EC2_KEY_NAME }}" \
-            -var="instance_type=c7i-flex.large"
-
+            -var="key_name=${{ secrets.EC2_KEY_NAME }}" 
 
       - name: Get Terraform Outputs
         id: tf_outputs
