@@ -66,38 +66,7 @@ jobs:
     #   - name: Install Ansible
     #     run: sudo apt-get update && sudo apt-get install -y ansible
 
-    #   - name: Configure SSH
-    #     run: |
-    #         mkdir -p ~/.ssh
-    #         echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/ec2_key.pem
-    #         chmod 400 ~/.ssh/ec2_key.pem
-
-
-    #   - name: Generate dynamic inventory
-    #     working-directory: terraform
-    #     run: |
-    #         mkdir -p ../ansible
-    #         echo "[amazon]" > ../ansible/inventory.ini
-    #         terraform output -json amazon_linux_ips \
-    #         | jq -r '.[] | "\(. ) ansible_user=ec2-user"' \
-    #         >> ../ansible/inventory.ini
-
-    #         echo "[ubuntu]" >> ../ansible/inventory.ini
-    #         terraform output -json ubuntu_ips \
-    #         | jq -r '.[] | "\(. ) ansible_user=ubuntu"' \
-    #         >> ../ansible/inventory.ini   
-
-    #   - name: Test Ansible connectivity
-    #     run: |
-    #         ANSIBLE_HOST_KEY_CHECKING=False \
-    #         ansible all -i ansible/inventory.ini -m ping
-    #           chmod 400 ~/.ssh/ec2_key.pem
-
-
-    #   - name: Run Ansible Playbook
-    #     run: |
-    #         ansible-playbook -i ansible/inventory.ini ansible/nginx-install.yml 
-    #         chmod 400 ~/.ssh/ec2_key.pem
+    #   
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -109,3 +78,36 @@ jobs:
           python -m pip install --upgrade --user pip
           python -m pip install --user ansible
           export PATH=$HOME/.local/bin:$PATH
+
+      - name: Configure SSH
+        run: |
+            mkdir -p ~/.ssh
+            echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/ec2_key.pem
+            chmod 400 ~/.ssh/ec2_key.pem
+
+
+      - name: Generate dynamic inventory
+        working-directory: terraform
+        run: |
+            mkdir -p ../ansible
+            echo "[amazon]" > ../ansible/inventory.ini
+            terraform output -json amazon_linux_ips \
+            | jq -r '.[] | "\(. ) ansible_user=ec2-user"' \
+            >> ../ansible/inventory.ini
+
+            echo "[ubuntu]" >> ../ansible/inventory.ini
+            terraform output -json ubuntu_ips \
+            | jq -r '.[] | "\(. ) ansible_user=ubuntu"' \
+            >> ../ansible/inventory.ini   
+
+      - name: Test Ansible connectivity
+        run: |
+            ANSIBLE_HOST_KEY_CHECKING=False \
+            ansible all -i ansible/inventory.ini -m ping
+              chmod 400 ~/.ssh/ec2_key.pem
+
+
+      - name: Run Ansible Playbook
+        run: |
+            ansible-playbook -i ansible/inventory.ini ansible/nginx-install.yml 
+            chmod 400 ~/.ssh/ec2_key.pem
