@@ -63,85 +63,79 @@ jobs:
          echo "AMAZON_IPS=$AMAZON_IPS" >> $GITHUB_ENV
          echo "UBUNTU_IPS=$UBUNTU_IPS" >> $GITHUB_ENV
 
+    #   - name: Install Ansible
+    #     run: sudo apt-get update && sudo apt-get install -y ansible
+
+    #   - name: Configure SSH
+    #     run: |
+    #         mkdir -p ~/.ssh
+    #         echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/ec2_key.pem
+    #         chmod 400 ~/.ssh/ec2_key.pem
+
+
+    #   - name: Generate dynamic inventory
+    #     working-directory: terraform
+    #     run: |
+    #         mkdir -p ../ansible
+    #         echo "[amazon]" > ../ansible/inventory.ini
+    #         terraform output -json amazon_linux_ips \
+    #         | jq -r '.[] | "\(. ) ansible_user=ec2-user"' \
+    #         >> ../ansible/inventory.ini
+
+    #         echo "[ubuntu]" >> ../ansible/inventory.ini
+    #         terraform output -json ubuntu_ips \
+    #         | jq -r '.[] | "\(. ) ansible_user=ubuntu"' \
+    #         >> ../ansible/inventory.ini   
+
+    #   - name: Test Ansible connectivity
+    #     run: |
+    #         ANSIBLE_HOST_KEY_CHECKING=False \
+    #         ansible all -i ansible/inventory.ini -m ping
+    #           chmod 400 ~/.ssh/ec2_key.pem
+
+
+    #   - name: Run Ansible Playbook
+    #     run: |
+    #         ansible-playbook -i ansible/inventory.ini ansible/nginx-install.yml 
+    #         chmod 400 ~/.ssh/ec2_key.pem
+
+      - name: Deploy with Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+
+          - name: Set up Python
+            uses: actions/setup-python@v4
+            with:
+            python-version: "3.11"
+
       - name: Install Ansible
-        run: sudo apt-get update && sudo apt-get install -y ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+
+      - name: Retrieve Terraform Output
+        run: |
+          terraform init
+          terraform apply -auto-approve
+          terraform output -json > tf_output.json
 
       - name: Configure SSH
         run: |
             mkdir -p ~/.ssh
-            echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/ec2_key.pem
-            chmod 400 ~/.ssh/ec2_key.pem
+            echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/ec2.pem
+            chmod 400 ~/.ssh/ec2.pem
 
-
-      - name: Generate dynamic inventory
-        working-directory: terraform
+      - name: Generate Ansible Inventory
         run: |
-            mkdir -p ../ansible
-            echo "[amazon]" > ../ansible/inventory.ini
-            terraform output -json amazon_linux_ips \
-            | jq -r '.[] | "\(. ) ansible_user=ec2-user"' \
-            >> ../ansible/inventory.ini
+          python generate_inventory.py  # Optional: script to read tf_output.json and write inventory.ini
 
-            echo "[ubuntu]" >> ../ansible/inventory.ini
-            terraform output -json ubuntu_ips \
-            | jq -r '.[] | "\(. ) ansible_user=ubuntu"' \
-            >> ../ansible/inventory.ini
-
-    #   - name: Display Ansible inventory
-    #     run: |
-    #         mkdir -p ansible
-    #         > ansible/inventory.ini
-
-    #         echo "[amazon]" >> ansible/inventory.ini
-    #         terraform output -raw amazon_linux_ips \
-    #         | tr ',' '\n' \
-    #         | awk '{print $1 " ansible_user=ec2-user"}' \
-    #         >> ansible/inventory.ini
-
-    #         echo "" >> ansible/inventory.ini
-    #         echo "[ubuntu]" >> ansible/inventory.ini
-    #         terraform output -raw ubuntu_ips \
-    #         | tr ',' '\n' \
-    #         | awk '{print $1 " ansible_user=ubuntu"}' \
-    #         >> ansible/inventory.ini
-
-    #         cat ansible/inventory.ini
-
-    #   - name: Generate Ansible Inventory
-    #     run: |
-    #         mkdir -p ansible
-    #         > ansible/inventory.ini
-
-    #         echo "[amazon]" >> ansible/inventory.ini
-    #         terraform output -raw amazon_linux_ips \
-    #         | tr ',' '\n' \
-    #         | sed 's/^/ /' \
-    #         | awk '{print $1 " ansible_user=ec2-user"}' \
-    #         >> ansible/inventory.ini
-
-    #         echo "" >> ansible/inventory.ini
-    #         echo "[ubuntu]" >> ansible/inventory.ini
-    #         terraform output -raw ubuntu_ips \
-    #         | tr ',' '\n' \
-    #         | awk '{print $1 " ansible_user=ubuntu"}' \
-    #         >> ansible/inventory.ini
-
-    #         cat ansible/inventory.ini   
-
-      - name: Test Ansible connectivity
+      - name: Test Ansible Connectivity
         run: |
             ANSIBLE_HOST_KEY_CHECKING=False \
-            ansible all -i ansible/inventory.ini -m ping
-              chmod 400 ~/.ssh/ec2_key.pem
-
-
+            ansible -i inventory.ini all -m ping \
+            --private-key ~/.ssh/ec2.pem  
+        
       - name: Run Ansible Playbook
-        run: |
-            ansible-playbook -i ansible/inventory.ini ansible/nginx-install.yml 
-            chmod 400 ~/.ssh/ec2_key.pem
+        run: ansible-playbook -i inventory.ini ansible/nginx-install.yml -c
 
-    #   - name: Create Ansible Inventory
-    #     run: |
-    #       sed -e "s/AMAZON_IP/${AMAZON_IP}/" \
-    #           -e "s/UBUNTU_IP/${UBUNTU_IP}/" \
-    #           ansible/inventory.ini > inventory.ini
