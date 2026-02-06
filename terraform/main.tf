@@ -77,6 +77,7 @@ resource "aws_instance" "amazon_linux" {
   ami           = data.aws_ami.amazon_linux.id
   instance_type = var.instance_type
   key_name      = var.key_name
+  associate_public_ip_address = true
   vpc_security_group_ids = [aws_security_group.server_sg.id]
 
   tags = {
@@ -90,6 +91,7 @@ resource "aws_instance" "ubuntu" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
   key_name      = var.key_name
+  associate_public_ip_address = true
   vpc_security_group_ids = [aws_security_group.server_sg.id]
 
   tags = {
