@@ -111,8 +111,9 @@ jobs:
 
       - name: Install Ansible
         run: |
-          python -m pip install --upgrade pip
-          pip install ansible
+            python -m pip install --upgrade --user pip
+            python -m pip install --user ansible
+            export PATH=$HOME/.local/bin:$PATH
 
       - name: Retrieve Terraform Output
         run: |
