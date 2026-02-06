@@ -137,7 +137,8 @@ jobs:
 
       - name: Run Ansible Playbook
         run: |
-        ansible-playbook -i ansible/inventory.ini ansible/nginx-install.yml chmod 400 ~/.ssh/ec2_key.pem
+            ansible-playbook -i ansible/inventory.ini ansible/nginx-install.yml 
+            chmod 400 ~/.ssh/ec2_key.pem
 
     #   - name: Create Ansible Inventory
     #     run: |
