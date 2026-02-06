@@ -99,54 +99,13 @@ jobs:
     #         ansible-playbook -i ansible/inventory.ini ansible/nginx-install.yml 
     #         chmod 400 ~/.ssh/ec2_key.pem
 
-      - name: Deploy with Ansible
-        run: |
-          python -m pip install --upgrade pip
-          pip install ansible
-
-          - name: Set up Python
-            uses: actions/setup-python@v4
-            with:
-            python-version: "3.11"
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
       - name: Install Ansible
         run: |
-            python -m pip install --upgrade --user pip
-            python -m pip install --user ansible
-            export PATH=$HOME/.local/bin:$PATH
-
-      - name: Retrieve Terraform Output
-        run: |
-          terraform init
-          terraform apply -auto-approve
-          terraform output -json > tf_output.json
-
-      - name: Show Outputs
-        if: github.event.inputs.tf_action == 'apply'
-        run: |
-             echo "amazon-linux-node-1 IP: ${{ env.AMAZON_IPS }}"
-             echo "amazon-linux-node-2 IP: ${{ env.AMAZON_IPS }}"
-             echo "amazon-linux-node-3 IP: ${{ env.AMAZON_IPS }}"
-             echo "ubuntu-node-1 IP: ${{ env.UBUNTU_IPS }}"
-             echo "ubuntu-node-2 IP: ${{ env.UBUNTU_IPS }}"
-             echo "ubuntu-node-3 IP: ${{ env.UBUNTU_IPS }}"
-
-      - name: Configure SSH
-        run: |
-            mkdir -p ~/.ssh
-            echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/ec2.pem
-            chmod 400 ~/.ssh/ec2.pem
-
-      - name: Generate Ansible Inventory
-        run: |
-          python generate_inventory.py  # Optional: script to read tf_output.json and write inventory.ini
-
-      - name: Test Ansible Connectivity
-        run: |
-            ANSIBLE_HOST_KEY_CHECKING=False \
-            ansible -i inventory.ini all -m ping \
-            --private-key ~/.ssh/ec2.pem  
-        
-      - name: Run Ansible Playbook
-        run: ansible-playbook -i inventory.ini ansible/nginx-install.yml -c
-
+          python -m pip install --upgrade --user pip
+          python -m pip install --user ansible
+          export PATH=$HOME/.local/bin:$PATH
