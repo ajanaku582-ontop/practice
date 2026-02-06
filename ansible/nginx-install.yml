@@ -34,3 +34,146 @@
         name: nginx
         state: started
         enabled: true
+
+    - name: Verify nginx is running
+      ansible.builtin.uri:
+        url: http://localhost
+        return_content: yes
+      register: nginx_response
+    - name: Display nginx response
+      ansible.builtin.debug:
+        msg: "{{ nginx_response.content }}"
+
+    - name: Ensure firewall allows HTTP traffic (Ubuntu)
+      ansible.builtin.ufw:
+        rule: allow
+        port: '80'
+        proto: tcp
+        state: enabled
+
+    - name: Ensure firewall allows HTTP traffic (Amazon Linux)
+      ansible.builtin.command: >
+        sudo iptables -C INPUT -p tcp --dport 80 -j ACCEPT || 
+        sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+      args:
+        warn: false
+
+    - name: Save iptables rules (Amazon Linux)
+      ansible.builtin.command: sudo service iptables save
+
+    - name: Ensure iptables service is running (Amazon Linux)
+      ansible.builtin.service:
+        name: iptables
+        state: started
+        enabled: true
+    
+    - name: Verify nginx is accessible from localhost (Amazon Linux)
+      ansible.builtin.uri:
+        url: http://localhost
+        return_content: yes
+      register: amazon_nginx_response
+
+    - name: Display nginx response (Amazon Linux)
+      ansible.builtin.debug:
+        msg: "{{ amazon_nginx_response.content }}"
+
+    - name: Verify nginx is accessible from localhost (Ubuntu)
+      ansible.builtin.uri:
+        url: http://localhost
+        return_content: yes
+      register: ubuntu_nginx_response
+
+    - name: Display nginx response (Ubuntu)
+      ansible.builtin.debug:
+        msg: "{{ ubuntu_nginx_response.content }}"
+
+- name: Configure Amazon Linux
+  hosts: amazon
+  become: true
+  tasks:
+    - name: Install nginx
+      yum:
+        name: nginx
+        state: present
+
+    - name: Start nginx
+      service:
+        name: nginx
+        state: started
+        enabled: true
+
+- name: Configure Ubuntu
+
+  hosts: ubuntu
+  become: true
+  tasks:
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: true
+
+    - name: Start nginx
+      service:
+        name: nginx
+        state: started
+        enabled: true
+
+- name: Verify nginx is running on Amazon Linux
+  hosts: amazon
+  become: true
+  tasks:
+    - name: Verify nginx is accessible from localhost
+      uri:
+        url: http://localhost
+        return_content: yes
+      register: nginx_response
+
+    - name: Display nginx response
+      debug:
+        msg: "{{ nginx_response.content }}"
+
+- name: Verify nginx is running on Ubuntu
+  hosts: ubuntu
+  become: true
+  tasks:
+    - name: Verify nginx is accessible from localhost
+      uri:
+        url: http://localhost
+        return_content: yes
+      register: nginx_response
+
+    - name: Display nginx response
+      debug:
+        msg: "{{ nginx_response.content }}"
+
+- name: Ensure firewall allows HTTP traffic on Ubuntu
+  hosts: ubuntu 
+  become: true
+  tasks:
+    - name: Ensure firewall allows HTTP traffic
+      ufw:
+        rule: allow
+        port: '80'
+        proto: tcp
+        state: enabled
+- name: Ensure firewall allows HTTP traffic on Amazon Linux
+  hosts: amazon
+  become: true
+  tasks:
+    - name: Ensure firewall allows HTTP traffic
+      command: >
+        sudo iptables -C INPUT -p tcp --dport 80 -j ACCEPT || 
+        sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+      args:
+        warn: false
+
+    - name: Save iptables rules
+      command: sudo service iptables save
+
+    - name: Ensure iptables service is running
+      service:
+        name: iptables
+        state: started
+        enabled: true
+- name: 
