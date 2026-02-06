@@ -54,19 +54,19 @@ jobs:
           terraform destroy -auto-approve \
             -var="key_name=${{ secrets.EC2_KEY_NAME }}" 
 
-      - name: Get Terraform Outputs
-        id: tf_outputs
-        working-directory: terraform
-        run: |
-         AMAZON_IPS=$(terraform output -json amazon_linux_ips | jq -r '. | join(",")')
-         UBUNTU_IPS=$(terraform output -json ubuntu_ips | jq -r '. | join(",")')
-         echo "AMAZON_IPS=$AMAZON_IPS" >> $GITHUB_ENV
-         echo "UBUNTU_IPS=$UBUNTU_IPS" >> $GITHUB_ENV
+    #   - name: Get Terraform Outputs
+    #     id: tf_outputs
+    #     working-directory: terraform
+    #     run: |
+    #      AMAZON_IPS=$(terraform output -json amazon_linux_ips | jq -r '. | join(",")')
+    #      UBUNTU_IPS=$(terraform output -json ubuntu_ips | jq -r '. | join(",")')
+    #      echo "AMAZON_IPS=$AMAZON_IPS" >> $GITHUB_ENV
+    #      echo "UBUNTU_IPS=$UBUNTU_IPS" >> $GITHUB_ENV
 
-         - name: Debug Terraform Outputs
-              run: |
-                 echo "Amazon Linux IPs: $AMAZON_IPS"
-                 echo "Ubuntu IPs: $UBUNTU_IPS"
+    #      - name: Debug Terraform Outputs
+    #           run: |
+    #              echo "Amazon Linux IPs: $AMAZON_IPS"
+    #              echo "Ubuntu IPs: $UBUNTU_IPS"
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -109,6 +109,6 @@ jobs:
 
       - name: Run Ansible Playbook
         run: |
-        
+
             ansible-playbook -i ansible/inventory.ini ansible/nginx-install.yml 
             chmod 400 ~/.ssh/ec2_key.pem
