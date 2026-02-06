@@ -63,10 +63,10 @@ jobs:
          echo "AMAZON_IPS=$AMAZON_IPS" >> $GITHUB_ENV
          echo "UBUNTU_IPS=$UBUNTU_IPS" >> $GITHUB_ENV
 
-    #   - name: Install Ansible
-    #     run: sudo apt-get update && sudo apt-get install -y ansible
-
-    #   
+         - name: Debug Terraform Outputs
+              run: |
+                 echo "Amazon Linux IPs: $AMAZON_IPS"
+                 echo "Ubuntu IPs: $UBUNTU_IPS"
 
       - name: Set up Python
         uses: actions/setup-python@v4
