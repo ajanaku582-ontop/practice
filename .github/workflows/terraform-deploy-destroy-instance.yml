@@ -87,29 +87,29 @@ jobs:
             | jq -r '.[] | "\(. ) ansible_user=ubuntu"' \
             >> ../ansible/inventory.ini
 
-      - name: Display Ansible inventory
-        run: |
-            mkdir -p ansible
-            > ansible/inventory.ini
+    #   - name: Display Ansible inventory
+    #     run: |
+    #         mkdir -p ansible
+    #         > ansible/inventory.ini
 
-            echo "[amazon]" >> ansible/inventory.ini
-            terraform output -raw amazon_linux_ips \
-            | tr ',' '\n' \
-            | awk '{print $1 " ansible_user=ec2-user"}' \
-            >> ansible/inventory.ini
+    #         echo "[amazon]" >> ansible/inventory.ini
+    #         terraform output -raw amazon_linux_ips \
+    #         | tr ',' '\n' \
+    #         | awk '{print $1 " ansible_user=ec2-user"}' \
+    #         >> ansible/inventory.ini
 
-            echo "" >> ansible/inventory.ini
-            echo "[ubuntu]" >> ansible/inventory.ini
-            terraform output -raw ubuntu_ips \
-            | tr ',' '\n' \
-            | awk '{print $1 " ansible_user=ubuntu"}' \
-            >> ansible/inventory.ini
+    #         echo "" >> ansible/inventory.ini
+    #         echo "[ubuntu]" >> ansible/inventory.ini
+    #         terraform output -raw ubuntu_ips \
+    #         | tr ',' '\n' \
+    #         | awk '{print $1 " ansible_user=ubuntu"}' \
+    #         >> ansible/inventory.ini
 
-            cat ansible/inventory.ini
+    #         cat ansible/inventory.ini
 
       - name: Generate Ansible Inventory
         run: |
-            -mkdir -p ansible
+            mkdir -p ansible
             > ansible/inventory.ini
 
             echo "[amazon]" >> ansible/inventory.ini
