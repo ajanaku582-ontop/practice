@@ -90,7 +90,7 @@ jobs:
       - name: Test Ansible connectivity
         run: |
             ANSIBLE_HOST_KEY_CHECKING=False \
-            ansible -i inventory.ini all -m ping \
+            ansible -i inventory.ini amazon -m ping \
              --private-key ~/.ssh/ec2_key.pem
 
 
