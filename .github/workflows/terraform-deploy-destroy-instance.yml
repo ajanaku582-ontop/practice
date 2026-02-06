@@ -107,21 +107,26 @@ jobs:
 
             cat ansible/inventory.ini
 
-      - name: Generate Ansible inventory
+      - name: Generate Ansible Inventory
         run: |
-            mkdir -p ansible
-            echo "[amazon]" > ansible/inventory.ini
+            -mkdir -p ansible
+            > ansible/inventory.ini
 
-            terraform output -raw amazon_linux_ips | tr ',' '\n' \
+            echo "[amazon]" >> ansible/inventory.ini
+            terraform output -raw amazon_linux_ips \
+            | tr ',' '\n' \
+            | sed 's/^/ /' \
             | awk '{print $1 " ansible_user=ec2-user"}' \
-             >> ansible/inventory.ini
+            >> ansible/inventory.ini
 
+            echo "" >> ansible/inventory.ini
             echo "[ubuntu]" >> ansible/inventory.ini
-            terraform output -raw ubuntu_ips | tr ',' '\n' \
+            terraform output -raw ubuntu_ips \
+            | tr ',' '\n' \
             | awk '{print $1 " ansible_user=ubuntu"}' \
             >> ansible/inventory.ini
 
-            cat ansible/inventory.ini
+            cat ansible/inventory.ini   
 
       - name: Test Ansible connectivity
         run: |
