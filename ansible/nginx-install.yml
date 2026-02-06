@@ -176,4 +176,24 @@
         name: iptables
         state: started
         enabled: true
-- name: 
+
+- name: copy index file
+  ansible.builtin.copy:
+    src: ../Nginx-artefacts/index.html
+    dest: /usr/share/nginx/html/index.html
+
+- name: create assets folder
+  ansible.builtin.file:
+    path: /usr/share/nginx/html/assets
+    state: directory
+
+- name: copy assets files
+  ansible.builtin.copy:
+    src: ../Nginx-artefacts/assets/app.js
+    dest: /usr/share/nginx/html/assets/app.js
+  
+- name: copy assets files 2
+  ansible.builtin.copy:
+    src: ../Nginx-artefacts/assets/styles.css
+    dest: /usr/share/nginx/html/assets/styles.css
+
