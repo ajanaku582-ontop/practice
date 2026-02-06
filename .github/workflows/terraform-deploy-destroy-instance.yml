@@ -121,6 +121,16 @@ jobs:
           terraform apply -auto-approve
           terraform output -json > tf_output.json
 
+      - name: Show Outputs
+        if: github.event.inputs.tf_action == 'apply'
+        run: |
+             echo "amazon-linux-node-1 IP: ${{ env.AMAZON_IPS }}"
+             echo "amazon-linux-node-2 IP: ${{ env.AMAZON_IPS }}"
+             echo "amazon-linux-node-3 IP: ${{ env.AMAZON_IPS }}"
+             echo "ubuntu-node-1 IP: ${{ env.UBUNTU_IPS }}"
+             echo "ubuntu-node-2 IP: ${{ env.UBUNTU_IPS }}"
+             echo "ubuntu-node-3 IP: ${{ env.UBUNTU_IPS }}"
+
       - name: Configure SSH
         run: |
             mkdir -p ~/.ssh
